@@ -2,14 +2,13 @@
 
 require_once 'Defines.php';
 require_once 'StaticAnalyzer.php';
-require_once 'Reconstruct.php';
 require_once 'DynamicAnalyzer.php';
 
 class Algorithm
 {
 
 # Scan directory and read all files, return array of feature vectors
-public function Traverse ($curr_homework, $homework_file)
+public function Traverse ($curr_homework, $homework_file, $deadline)
     {
         $FVECTORS = [];
         $path = \EP\SOURCES_PATH . DIRECTORY_SEPARATOR . $curr_homework;
@@ -20,18 +19,23 @@ public function Traverse ($curr_homework, $homework_file)
                 
                 $pos = strrpos($file, ".");
                 $username = substr($file, 0, $pos);
-                $FVECTORS[$username] = $this->GetFV($username, $fpath, $curr_homework . "/" . $homework_file);
+                print "User $username...\n";
+                $FVECTORS[$username] = $this->GetFV($username, $fpath, $curr_homework . "/" . $homework_file, $deadline);
                 if (empty($FVECTORS[$username])) unset($FVECTORS[$username]);
             }
         return $FVECTORS;
     }
 
 # Get feature vector for user
-public function GetFV ($username, $realpath, $c9path)
+public function GetFV ($username, $realpath, $c9path, $deadline)
     {
-        $r = new Reconstruct($username, true);
-        $st = $r->ReadStats();
-        $d = new DynamicAnalyzer ($st, $c9path);
+        try {
+            $d = new DynamicAnalyzer ($username, $c9path, $deadline);
+        } catch (Exception $e) {
+            print "Exception: " . $e->getMessage() . "\n";
+            $reflector = new ReflectionClass("DynamicAnalyzer");
+            $d = $reflector->newInstanceWithoutConstructor();
+        } 
         $str = "";
         if (file_exists($realpath))
             $str = file_get_contents($realpath);
@@ -50,6 +54,8 @@ public function GetFV ($username, $realpath, $c9path)
             \EP\TS_SPEED => $d->GetSPEED(),                     #brzina promjena (razlika između timestampova)
             \EP\TESTINGS => $d->GetTESTED(),                    #broj testiranja
             \EP\WORK_TIME => $d->GetTIME(),                     #vrijeme pisanja kôda
+            \EP\SHORT_BREAKS => $d->GetSHORTBREAKS(),                     #pauze 15-300 sekundi
+            \EP\LONG_BREAKS => $d->GetLONGBREAKS(),                     #pauze 300-900 sekundi
             #staticki dio
             \EP\ALL_NUMBERS => $s->GetALLNUMBERS(),             #broj brojeva (svi, i ab1)
             \EP\NUM_ARRAYS => $s->GetARRAYS(),                  #broj nizova
@@ -102,6 +108,8 @@ public function GetW ()
         $W[\EP\TS_SPEED] = 1.0;              #brzina promjena (razlika između timestampova)		0.63 - 0.64		1.13 - 2.06 (bliže 1.13)
         $W[\EP\TESTINGS] = 1.0;              #broj testiranja						0.88 - 0.92		-0.40 - 0.10
         $W[\EP\WORK_TIME] = 1.0;             #vrijeme pisanja kôda					0.56 - 0.75		-0.30 - 0 (centar na -0.10, outliers: +0.10*2)
+        $W[\EP\SHORT_BREAKS] = 1.0;             #pauze 15-300 sekundi
+        $W[\EP\LONG_BREAKS] = 1.0;             #pauze 300-900 sekundi
         #staticki dio
         $W[\EP\ALL_NUMBERS] = 1.0;           #broj brojeva (svi, i ab1)					1.74			2.04 (outliers: 1.94)
         $W[\EP\NUM_ARRAYS] = 1.0;            #broj nizova						0.71 - 0.73		0.10
@@ -172,11 +180,19 @@ public function Distance ($v1, $v2, $w, $dist = \EP\DEFAULT_DISTANCE)
         $sum = 0.0;
         if ($dist == 1) #Euclid
             {
+                $dynamic1 = false; $dynamic2 = false;
+                $count1 = 0; $count2 = 0;
                 foreach ($v1 as $k => $v)
                     {
                         $wi = $w[$k];
                         $y = $v2[$k];
                         $sum += $this->Signum($wi) * $wi * $wi * (($v - $y) * ($v - $y));
+                        
+                        // If one of FVs has no dynamic features, ignore them completely
+                        if ($v==0) $count1++; else $dynamic1 = true;
+                        if ($y==0) $count2++; else $dynamic2 = true;
+                        if ($count1 == \EP\NR_DYNAMIC_FEATURES && !$dynamic1 || $count2 == \EP\NR_DYNAMIC_FEATURES && !$dynamic2)
+                            $sum = 0;
                     }
                 return sqrt ($sum);
             }

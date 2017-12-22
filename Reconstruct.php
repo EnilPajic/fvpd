@@ -30,9 +30,14 @@ class Reconstruct
         {
             $username_efn = self::escape_filename($this->username);
             $stat_file = \EP\STATS_PATH . DIRECTORY_SEPARATOR . "$username_efn.stats";
-            $stats = null;
-            if (file_exists($stat_file)) eval(file_get_contents($stat_file));
+            $stats = $stats_goto = null;
+            
+            if (!file_exists($stat_file))
+                throw new Exception("Stats file is missing!", 8);
+            
+            eval(file_get_contents($stat_file));
             $this->stats = $stats;
+            if (empty($stats)) $this->stats = $stats_goto;
             if ($this->stats == NULL) {
                 $this->stats = array(
                     "global_events" => array(),
@@ -55,6 +60,28 @@ class Reconstruct
             return $this->stats;
         }
 
+    // Remove all events not within given interval (
+    public static function StatsDeadline ($stats, $deadline, $start=0) 
+        {
+            if (!array_key_exists('events', $stats))
+                {
+                    foreach ($stats as $filename => &$fstats)
+                        $fstats = Reconstruct::StatsDeadline($fstats, $deadline);
+                    return $stats;
+                }
+            
+            end($stats['events']);
+            $end = key($stats['events']);
+            for ($i=0; $i<$end; $i++) {
+                if (!array_key_exists($i, $stats)) continue;
+                if ($stats[$i]['time'] > $deadline) unset($stats[$i]);
+                if ($stats[$i]['time'] < $start) unset($stats[$i]);
+            }
+            return $stats;
+        }
+
+    // Remove events not related to current version of file 
+    // (e.g. before last code replace event)
     public function GetRelevantStats () 
         {
             $stats = $this->stats[$this->filename];
@@ -115,12 +142,12 @@ class Reconstruct
             
             return $stats;
         }
-    public function TryReconstruct($realpath, $c9path, $timestamp)
+    public function TryReconstruct($path, $timestamp)
         {
             if (intval($timestamp) < 100 && $timestamp[0] != "+") $timestamp = strtotime($timestamp);
             //list($s, $this->file) = self::reconstruct_file($this->username, $realpath, $c9path, $timestamp);
             // return $s;
-            $this->filename = $c9path;
+            $this->filename = $path;
             return Reconstruct::ReconstructFileForward ($timestamp);
         }
 
@@ -212,7 +239,7 @@ class Reconstruct
                     if ($timestamp[0] != "+" && $file_log[$i]['time'] > $timestamp) break;
                     if ($i < -$timestamp) break;
                     
-                    if ($file_log[$i]['text'] == "created") 
+                    if ($file_log[$i]['text'] == "created" && array_key_exists('content', $file_log[$i])) 
                         {
                             $this->file = explode("\n", $file_log[$i]['content']);
                             foreach($this->file as &$line) $line .= "\n";
@@ -285,7 +312,7 @@ class Reconstruct
                                     $offset--;
                                     array_splice($this->file, $lineno+$offset, 1);
                                 }
-                                else if ($this->file[$lineno+$offset+1] == $text) {
+                                else if ($lineno+$offset+1 < count($this->file) && $this->file[$lineno+$offset+1] == $text) {
                                     if (self::$DEBUG) print "Korigujem +1\n";
                                     $offset++;
                                     array_splice($this->file, $lineno+$offset, 1);
