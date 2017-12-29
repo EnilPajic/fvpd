@@ -186,7 +186,7 @@ public function Distance ($v1, $v2, $w, $dist = \EP\DEFAULT_DISTANCE)
                     {
                         $wi = $w[$k];
                         $y = $v2[$k];
-                        $sum += $this->Signum($wi) * $wi * $wi * (($v - $y) * ($v - $y));
+                        $sum += $wi * $wi * (($v - $y) * ($v - $y));
                         
                         // If one of FVs has no dynamic features, ignore them completely
                         if ($v==0) $count1++; else $dynamic1 = true;
