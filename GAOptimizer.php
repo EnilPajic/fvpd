@@ -120,13 +120,28 @@ class GAOptimizer
             #return rand() / getrandmax();
             foreach($this->training_set as $data)
                 {
-                    $Distances = $this->algorithm->CalculateDistances( $this->feature_vectors[$data['path']], $Weights );
+                    $FlatDists = $this->algorithm->FlatDistances( $this->feature_vectors[$data['path']], $Weights, 5 );
+                    $files = count($FlatDists);
                     
-                    $threshold = $FP = $FN = 0;
-                    $this->EvaluateOne( $Distances, $this->ground_truth[$data['path']], $threshold, $FP, $FN);
-                    $fitness = 1 - ($FP + $FN) / count( $this->ground_truth[$data['path']] );
-                    if ($output) print $data['path']." Best threshold $threshold (FP $FP, FN $FN) Fitness $fitness\n";
+                    $GT = $this->ground_truth[$data['path']];
+                    $GTmatches = $this->ground_truth_matches[$data['path']];
+                    $found = [];
+                    $founds = $i = 0;
+                    foreach($GT as $file) $found[$file] = false;
+                    
+                    foreach ($FlatDists as $pair => $dist) {
+                           list($left, $right) = explode(",", $pair);
+                            if (in_array($left, $GT) && !$found[$left]) { $found[$left] = true; $founds++; }
+                            if (in_array($right, $GT) && !$found[$right]) { $found[$right] = true; $founds++; }
+                            $i++;
+                            if ($i > count($GT)) break;
+                    }
+                    $fitness = $founds / count($GT);
+                    if($this->output)  print $data['path']." Fitness $fitness\n";
+                    
                     $total_fitness += $fitness;
+                    $total_founds += $founds;
+                    $total_gt += count($GT);
                 }
             return $total_fitness / count($this->training_set);
         }

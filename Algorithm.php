@@ -228,6 +228,27 @@ public function CalculateDistances($FVECTORS, $FVW)
             }
         return $DISTANCES;
     }
+# Better function that doesn't include duplicates and redundant entries
+public function FlatDistances($FVECTORS, $FVW, $Threshold)
+    {
+        $DISTANCES = [];
+        $FILES = array_keys($FVECTORS);
+        $numFiles = count($FILES);
+        for ($i = 0; $i < $numFiles; ++$i) {
+            for ($j = $i+1; $j < $numFiles; ++$j) {
+                $dist = $this->Distance($FVECTORS[$FILES[$i]], $FVECTORS[$FILES[$j]], $FVW);
+                if ($dist < $Threshold) $DISTANCES[$FILES[$i].",".$FILES[$j]] = $dist;
+                /*for ($k = 0; $k < $i; ++$k) {
+                    if (!in_array($FILES[$k].",".$FILES[$i], $DISTANCES) || !in_array($FILES[$k].",".$FILES[$j], $DISTANCES)) continue;
+                    if ($dist > $DISTANCES[$FILES[$k].",".$FILES[$i]]) unset($DISTANCES[$FILES[$k].",".$FILES[$i]]);
+                    else if ($dist > $DISTANCES[$FILES[$k].",".$FILES[$j]]) unset($DISTANCES[$FILES[$k].",".$FILES[$j]]);
+                    else unset($DISTANCES[$FILES[$i].",".$FILES[$j]]);
+                }*/
+            }
+        }
+        asort($DISTANCES);
+        return $DISTANCES;
+    }
 # Prints out distances < threshold    
 public function NiceOutput($DISTANCES, $threshold = \EP\DEFAULT_THRESHOLD)
     {
@@ -240,6 +261,19 @@ public function NiceOutput($DISTANCES, $threshold = \EP\DEFAULT_THRESHOLD)
                     
                     } #TODO malo bolje ovo formatirati + skalirati distance
                 echo "<br>\n";
+            }
+    }
+
+}
+# Prints out distances < threshold    
+public function NiceOutputFlat($DISTANCES, $html = true)
+    {
+        foreach ($DISTANCES as $k => $v)
+            {
+                if ($html)
+                    printf("$k: <b>%5.2f</b><br>\n", $v);
+                else
+                    printf("$k: %5.2f\n", $v);
             }
     }
 
