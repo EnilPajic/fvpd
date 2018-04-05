@@ -219,30 +219,8 @@ class GAOptimizer
         {
             $total_fitness = 0;
             $total_founds = $total_gt = 0;
-            #return rand() / getrandmax();
             foreach($this->training_set as $data)
                 {
-                    //$Distances = $this->algorithm->CalculateDistances( $this->feature_vectors[$data['path']], $Weights );
-                    /*
-                    $threshold = $FP = $FN = 0;
-                    $this->EvaluateOne( $Distances, $this->ground_truth[$data['path']], $threshold, $FP, $FN);
-                    // Accuracy
-                    //$fitness = 1 - ($FP + $FN) / count( $this->ground_truth[$data['path']] );
-                    // Classification error
-                    $fitness = 1 - ($FP + $FN) /  count( $this->feature_vectors[$data['path']] );
-                    if($this->output)  print $data['path']." Best threshold $threshold (FP $FP, FN $FN) Fitness $fitness\n";
-                    */
-                    
-                    /*$FlatDists = array();
-                    $files = 0;
-                    foreach ($Distances as $k => $v) {
-                        $files2 = 0;
-                        foreach ($v as $kk => $vv)
-                            if ($files2++ >= $files) 
-                                $FlatDists[$k . "," . $kk] = $vv;
-                        $files++;
-                    }
-                    asort($FlatDists);*/
                     $FlatDists = $this->algorithm->FlatDistances( $this->feature_vectors[$data['path']], $Weights, 5 );
                     $files = count($FlatDists);
                     
@@ -255,8 +233,8 @@ class GAOptimizer
                     
                     foreach ($FlatDists as $pair => $dist) {
                            list($left, $right) = explode(",", $pair);
-                            if (in_array($left, $GT) && !$found[$left] && in_array($right, $GTmatches[$left])) { $found[$left] = true; $founds++; }
-                            if (in_array($right, $GT) && !$found[$right] && in_array($left, $GTmatches[$right])) { $found[$right] = true; $founds++; }
+                            if (in_array($left, $GT) && !$found[$left]) { $found[$left] = true; $founds++; }
+                            if (in_array($right, $GT) && !$found[$right]) { $found[$right] = true; $founds++; }
                             $i++;
                             if ($i > count($GT)) break;
                     }
@@ -267,8 +245,7 @@ class GAOptimizer
                     $total_founds += $founds;
                     $total_gt += count($GT);
                 }
-            //return $total_fitness / count($this->training_set);
-            return $total_founds / $total_gt;
+            return $total_fitness / count($this->training_set);
         }
     
     # Initialize GeneticAlgorithm
@@ -372,7 +349,6 @@ class GAOptimizer
         {
             $child = [];
             $mutation_gene_probability = \EP\GA_MUTATION_PROBABILITY;
-            $did_mutate = false;
 
             // Randomly cross genes from both parents
             for ($i = 0; $i < count($parent1); $i++) 
@@ -482,19 +458,6 @@ class GAOptimizer
 
     public function DebugFitness($individual, $path, $printDistances = false)
         {
-            /*$Distances = $this->algorithm->CalculateDistances( $this->feature_vectors[$path], $this->population[$individual] );
-            if ($printDistances) $this->algorithm->NiceOutput($Distances);
-            
-            $FlatDists = array();
-            $files = 0;
-            foreach ($Distances as $k => $v) {
-                $files2 = 0;
-                foreach ($v as $kk => $vv)
-                    if ($files2++ >= $files) 
-                        $FlatDists[$k . "," . $kk] = $vv;
-                $files++;
-            }
-            asort($FlatDists);*/
             $FlatDists = $this->algorithm->FlatDistances( $this->feature_vectors[$path], $this->population[$individual], 5 );
             if ($printDistances) $this->algorithm->NiceOutputFlat($FlatDists);
             $files = count($FlatDists);
@@ -511,8 +474,6 @@ class GAOptimizer
                     list($left, $right) = explode(",", $pair);
                     if (in_array($left, $GT) && !$found[$left]) { $found[$left] = true; $founds++; print "Found $left dist $dist (right $right)\n"; }
                     if (in_array($right, $GT) && !$found[$right]) { $found[$right] = true; $founds++; print "Found $right dist $dist (left $left)\n"; }
-                    //if (!in_array($left, $GT)) { print "Wrong found $left (dist $dist right $right)\n"; }
-                    //else if (!in_array($right, $GT)) { print "Wrong found $right (dist $dist left $left)\n"; }
                     $i++;
                     if ($i > count($GT)) break;
                 }
@@ -627,27 +588,6 @@ class GAOptimizer
             } else {
            
                 print "Starting strain ".(count($this->strains)+1).", generation 1\n\n";
-                
-                /*
-                for ($i=0; $i<count($this->memory); $i++) {
-                    $item = $this->memory[$i];
-                    $dist = GAOptimizer::GenomeDistance($population[0], $item['genome']);
-                    $fitness_difference = 1 - abs($fitness[0] - $item['fitness']);
-                    for ($j=0; $j<count($this->strains)-1; $j++)
-                        $fitness_difference *= 1 - abs($this->strains[$j]['fitness'][0] - $item['fitness']);
-                    $fitness_difference = pow($fitness_difference, 1 / (count($this->strains)));
-                    $candidates[$i] = $dist * $fitness_difference;
-                }
-                arsort($candidates);
-                
-                $population = $names = $fitness = [];
-                foreach($candidates as $key => $value) {
-                    if($this->output) print "Picking candidate ".$this->memory[$key]['name']." ($value)\n";
-                    $population[] = $this->memory[$key]['genome'];
-                    $names[] = $this->memory[$key]['name'];
-                    $fitness[] = $this->memory[$key]['fitness'];
-                    if (count($population) > \EP\GA_PROGENITORS_SIZE) break;
-                }*/
                 
                 // Add some random members to population
                 $population = $names = $fitness = [];
