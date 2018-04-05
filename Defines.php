@@ -15,6 +15,7 @@ const TESTINGS = "TESTINGS";
 const WORK_TIME = "WORK_TIME";
 const SHORT_BREAKS = "SHORT_BREAKS";
 const LONG_BREAKS = "LONG_BREAKS";
+const TIME_FROM_DEADLINE = "TIME_FROM_DEADLINE";
 
 
 const ALL_NUMBERS = "ALL_NUMBERS";
@@ -58,8 +59,8 @@ const STATS_PATH = "/home/vedran/Code/cloud9/stats/OR2016";
 const GA_POPULATION_SIZE = 50;
 const GA_PROGENITORS_SIZE = 10;
 const GA_MUTATION_PROBABILITY = 0.2; // 0.02
-const GENOME_SIZE = 46;
-const NR_DYNAMIC_FEATURES = 14;
+const GENOME_SIZE = 47;
+const NR_DYNAMIC_FEATURES = 15;
 const RECONSTRUCT_USE_GOTO = true;
 const SKIP_DYNAMIC = false; // Ignore dynamic features, just use static
 
