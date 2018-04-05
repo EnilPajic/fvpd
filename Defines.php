@@ -61,6 +61,7 @@ const GA_MUTATION_PROBABILITY = 0.2; // 0.02
 const GENOME_SIZE = 46;
 const NR_DYNAMIC_FEATURES = 14;
 const RECONSTRUCT_USE_GOTO = true;
+const SKIP_DYNAMIC = false; // Ignore dynamic features, just use static
 
 
 ?>

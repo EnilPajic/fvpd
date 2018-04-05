@@ -182,21 +182,17 @@ public function Distance ($v1, $v2, $w, $dist = \EP\DEFAULT_DISTANCE)
         if ($dist == 1) #Euclid
             {
                 $dynamic1 = false; $dynamic2 = false;
-                $count1 = 0; $count2 = 0;
+                $count1 = 0; $count2 = 0; $i=0;
                 foreach ($v1 as $k => $v)
                     {
+                        if (\EP\SKIP_DYNAMIC && ++$i < \EP\NR_DYNAMIC_FEATURES) continue;
                         $wi = $w[$k];
                         $y = $v2[$k];
+                        //$sum += $this->Signum($wi) * $wi * $wi * (($v - $y) * ($v - $y));
                         if ($wi < 0)
                             $sum -= $wi * $wi * (($v - $y) * ($v - $y));
                         else if ($wi > 0)
                             $sum += $wi * $wi * (($v - $y) * ($v - $y));
-                        
-                        // If one of FVs has no dynamic features, ignore them completely
-                        if ($v==0) $count1++; else $dynamic1 = true;
-                        if ($y==0) $count2++; else $dynamic2 = true;
-                        if ($count1 == \EP\NR_DYNAMIC_FEATURES && !$dynamic1 || $count2 == \EP\NR_DYNAMIC_FEATURES && !$dynamic2)
-                            $sum = 0;
                     }
                 return $this->Signum($sum) * sqrt ( abs( $sum ) );
             }
