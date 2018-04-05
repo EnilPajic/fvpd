@@ -37,7 +37,17 @@ class StaticAnalyzer
         {
             $this->file = $file;
 
-            $file = preg_replace(self::$regex_mcomment, '', $file, -1, $this->MCOMMENT); #izbacimo multiline komentare
+            //$file = preg_replace(self::$regex_mcomment, '', $file, -1, $this->MCOMMENT); #izbacimo multiline komentare
+            // Multiline
+            $k = strpos($file, "/*");
+            while ($k) {
+                $l = strpos($file, "*/", $k+2);
+                if (!$l) break;
+                $this->MCOMMENT ++;
+                $file = substr($file, 0, $k) . substr($file, $l+2);
+                $k = strpos($file, "/*", $k);
+            }
+            
             $file = preg_replace(self::$regex_comment, '', $file, -1, $this->SCOMMENT); #izbacimo // komentare
             if ($stripstring)
                 $file = preg_replace(self::$regex_string, '', $file, -1, $this->STRINGS); #izbacimo string literale
