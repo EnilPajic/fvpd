@@ -27,7 +27,7 @@ end($stats[$filename]['events']);
 $end = key($stats[$filename]['events']);
 for ($i=1; $i<=$end; $i++) {
 	if (!array_key_exists($i-1, $stats[$filename]['events'])) continue;
-	if (!$r->TryReconstruct($filename, $filename, "+$i")) {
+	if (!$r->TryReconstruct($filename, "+$i")) {
 		print "Došlo je do greške u koraku $i\n";
 		break;
 	}
