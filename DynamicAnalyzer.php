@@ -8,7 +8,7 @@ class DynamicAnalyzer
     private $COMPILED = 0, $TESTED = 0, $COMPILEDSUCC = 0, $AVGTEST = 0.0;
     private $MODIFIED = 0, $ADDED = 0, $DELETED = 0, $TIME = 0;
     private $PASTE = 0, $MAXPASTE = 0, $AVGPASTE = 0, $SPEED = 0;
-    private $SHORTBREAKS = 0, $LONGBREAKS = 0;
+    private $SHORTBREAKS = 0, $LONGBREAKS = 0, $TIMEFROMDEADLINE = 0;
 
     private static $PASTE_LIMIT = 5; // Maximum number of lines that represent a paste event
     private static $TYPE_LIMIT = 15; // < 15 second = typing
@@ -39,6 +39,7 @@ class DynamicAnalyzer
             
             $stats = Reconstruct::StatsDeadline( $stats, $deadline, $start );
             $this->stats = $stats;
+            $this->TIMEFROMDEADLINE = doubleval($deadline - $start) / 3600;
             
             $this->dirname = pathinfo($path, PATHINFO_DIRNAME);
             $this->fullpath = $path;
@@ -237,6 +238,11 @@ class DynamicAnalyzer
     public function GetLONGBREAKS ()
         {
             return $this->LONGBREAKS;
+        }
+
+    public function GetTIMEFROMDEADLINE ()
+        {
+            return $this->TIMEFROMDEADLINE;
         }
 
     public function GetStats ()
