@@ -102,9 +102,14 @@ class DynamicAnalyzer
                             $this->DELETED += count($remove);
                             $this->MODIFIED += count($change);
                             
+                            // Don't count blank lines into paste
+                            foreach ($add as $keya => $addline)
+                                if (empty(trim($addline))) unset($add[$keya]);
+                            foreach ($remove as $keyr => $removeline)
+                                if (empty(trim($removeline))) unset($remove[$keyr]);
+                            
                             // Detect paste
-                            $lines_changed = count($add) + count($change);
-                            if ($lines_changed > self::$PASTE_LIMIT)
+                            if (count($add) > self::$PASTE_LIMIT)
                                 {
                                     $change_length = 0;
                                     foreach($add as $line) $change_length += strlen($line);
