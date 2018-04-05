@@ -110,6 +110,7 @@ public function GetW ()
         $W[\EP\WORK_TIME] = 1.0;             #vrijeme pisanja kôda					0.56 - 0.75		-0.30 - 0 (centar na -0.10, outliers: +0.10*2)
         $W[\EP\SHORT_BREAKS] = 1.0;             #pauze 15-300 sekundi
         $W[\EP\LONG_BREAKS] = 1.0;             #pauze 300-900 sekundi
+        $W[\EP\TIME_FROM_DEADLINE] = 1.0;    #koliko sati prije isteka roka je poceo
         #staticki dio
         $W[\EP\ALL_NUMBERS] = 1.0;           #broj brojeva (svi, i ab1)					1.74			2.04 (outliers: 1.94)
         $W[\EP\NUM_ARRAYS] = 1.0;            #broj nizova						0.71 - 0.73		0.10
