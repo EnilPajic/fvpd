@@ -7,7 +7,7 @@ require_once 'Defines.php';
 
 class Reconstruct
 {
-    private static $REPLACE_LIMIT = 3; // Maximum number of lines remaining in replace event e.g. hello world
+    private static $REPLACE_LIMIT = 6; // Maximum number of lines remaining in replace event e.g. hello world
     private static $DEBUG = false;
     
     private $incgoto = false;
@@ -60,13 +60,43 @@ class Reconstruct
             return $this->stats;
         }
 
-    // Remove all events not within given interval (
-    public static function StatsDeadline ($stats, $deadline, $start=0) 
+    // Remove events not related to current version of file 
+    // (e.g. before last code replace event)
+    public static function GetTotalTime ($stats, $path, $deadline)
         {
+            if (!array_key_exists('events', $stats) && array_key_exists($path, $stats))
+                {
+                    $stats[$path] = Reconstruct::GetTotalTime($stats[$path], $path, $deadline);
+                    return $stats;
+                }
+                
+            $time = $lastevent = 0;
+            $time_limit = 60;
+            foreach($stats['events'] as $event)
+                {
+                    if ($event['time'] > $deadline) break;
+                    if ($lastevent != 0) {
+                        $dtime = $event['time'] - $lastevent['time'];
+                        if ($dtime > $time_limit) $dtime = $time_limit;
+                        $time += $dtime;
+                    }
+                    $lastevent = $event;    
+                }
+            return $time;
+        }
+
+    // Remove all events not within given interval (
+    public static function StatsDeadline ($stats, $path, $deadline, $start=0) 
+        {
+            if (!array_key_exists('events', $stats) && array_key_exists($path, $stats))
+                {
+                    $stats[$path] = Reconstruct::StatsDeadline($stats[$path], $path, $deadline);
+                    return $stats;
+                }
             if (!array_key_exists('events', $stats))
                 {
                     foreach ($stats as $filename => &$fstats)
-                        $fstats = Reconstruct::StatsDeadline($fstats, $deadline);
+                        $fstats = Reconstruct::StatsDeadline($fstats, $path, $deadline);
                     return $stats;
                 }
             
@@ -87,7 +117,7 @@ class Reconstruct
             $stats = $this->stats[$this->filename];
             
             // Find index of 'created' event
-            $idxCreated = 0;
+            $idxCreated = $offset = 0;
             for (; $idxCreated < $this->totalEvents; $idxCreated++)
                 if ($stats['events'][$idxCreated]['text'] == "created")
                     break;
@@ -128,13 +158,15 @@ class Reconstruct
                         }
                     else
                         {
-                            $idx+=2;
-                            $time = $stats['events'][$idx]['time'];
+                            $idx = $idx + 2;
+                            $time = $stats['events'][$idx - $offset]['time'];
                             $this->lastEvent = 0;
                             $this->ReconstructFileForward("+$idx");
                             $file = join("", $this->file);
+                            $idx -= $offset;
                             
                             array_splice($stats['events'], $idxCreated+1, $idx-1);
+                            $offset = $idx-$idxCreated-1;
                             $stats['events'][$idxCreated]['time'] = $time;
                             $stats['events'][$idxCreated]['content'] = $file;
                         }
@@ -235,7 +267,7 @@ class Reconstruct
             for ($i=$this->lastEvent; $i<$end; $i++) 
                 {
                     if (!array_key_exists($i, $file_log)) continue;
-                    //print "$i,";
+                    //if (self::$DEBUG) print "Event: $i\n";
                     if ($timestamp[0] != "+" && $file_log[$i]['time'] > $timestamp) break;
                     if ($i < -$timestamp) break;
                     
@@ -280,7 +312,7 @@ class Reconstruct
                         }
                     
                     // Create a combined sorted array
-                    $lines = array();
+                    $lines = $retry_delete = array();
                     if ($hasRemove)
                         foreach($file_log[$i]['diff']['remove_lines'] as $lineno => $text)
                             $lines[$lineno][] = "-".$text;
@@ -290,7 +322,7 @@ class Reconstruct
                     
                     ksort($lines);
                     
-                    $offset = -1; $lineRemoved=-1;
+                    $offset = -1; $lineRemoved=-1; $retryOffset = 0;
                     foreach($lines as $lineno => $spec) {
                         foreach($spec as $entry) {
                             $text = substr($entry,1) . "\n";
@@ -298,7 +330,7 @@ class Reconstruct
                             if ($entry[0] == '-' && $lineRemoved == $lineno-1) $offset--; // Contiguous removal
                             
                             if ($entry[0] == '-' && $lineno+$offset < count($this->file) && $this->file[$lineno+$offset] == $text) {
-                                if (self::$DEBUG) print "Izbacujem liniju $lineno (ok)\n";
+                                if (self::$DEBUG) print "Izbacujem liniju $lineno (ok) - offset $offset\n";
                                 array_splice($this->file, $lineno+$offset, 1);
                                 $lineRemoved=$lineno;
                                 
@@ -306,26 +338,76 @@ class Reconstruct
                                 if ($lineno+$offset == count($this->file)-1 && $this->file[$lineno+$offset] == "\n")
                                     array_splice($this->file, $lineno+$offset, 1);
                             } else if ($entry[0] == '-') {
-                                if (self::$DEBUG) print "Izbacivanje nije ok ($lineno treba biti '".chop($text)."' a glasi '".chop($this->file[$lineno+$offset])."')\n";
-                                if ($lineno+$offset > 0 && $this->file[$lineno+$offset-1] == $text) {
+                                if (self::$DEBUG) print "Izbacivanje nije ok ($lineno treba biti '".chop($text)."' a glasi '".chop($this->file[$lineno+$offset])."') - offset $offset\n";
+                                if (array_key_exists($lineno+$offset-1, $this->file) && $this->file[$lineno+$offset-1] == $text) {
                                     if (self::$DEBUG) print "Korigujem -1\n";
                                     $offset--;
                                     array_splice($this->file, $lineno+$offset, 1);
                                 }
-                                else if ($lineno+$offset+1 < count($this->file) && $this->file[$lineno+$offset+1] == $text) {
+                                else if (array_key_exists($lineno+$offset+1, $this->file) &&  $this->file[$lineno+$offset+1] == $text) {
                                     if (self::$DEBUG) print "Korigujem +1\n";
                                     $offset++;
                                     array_splice($this->file, $lineno+$offset, 1);
                                 }
+                                else {
+                                    $retry_delete[] = array($lineno, $text);
+                                    $retryOffset = $offset;
+                                }
                             } else {
                                 if ($lineno+$offset < 0) $offset = -$lineno;
                                 if (self::$DEBUG) print "Ubacujem liniju $lineno ('".chop($text)."')\n";
+                                if (empty($this->file)) $this->file = [];
                                 array_splice($this->file, $lineno+$offset, 0, $text);
                                 $lineRemoved=-1;
                             }
                         }
                     }
                     
+                    // Now retry failed deletes
+                    // But also!
+                    /*$offset = $retryOffset;
+                    foreach($retry_delete as $key => $entry) {
+                        $lineno=$entry[0]; $text = $entry[1];
+                        if (array_key_exists($lineno+$offset, $this->file) && $this->file[$lineno+$offset] == $text) {
+                            if (self::$DEBUG) print "Ponavljam $lineno ('" . chop($text) . "') bez korekcije\n";
+                            unset($retry_delete[$key]);
+                        } else {
+                            if (self::$DEBUG) print "Brisem liniju $lineno iako ('" . chop($text) . "') nije jednako ('" . chop($this->file[$lineno+$offset]) . "')\n";
+                        }
+                        array_splice($this->file, $lineno+$offset, 1);
+                        $offset--;
+                    }*/
+                    
+                    $offset = $retryOffset;
+                    foreach($retry_delete as $entry) {
+                        $lineno=$entry[0]; $text = $entry[1];
+                        $newoffset = 0;
+                        while(true) {
+                            $try = $lineno+$offset+$newoffset;
+                            if (array_key_exists($try, $this->file) && $this->file[$try] == $text) {
+                                $offset += $newoffset;
+                                if (self::$DEBUG) print "Ponavljam $lineno ('" . chop($text) . "'), korigujem $offset\n";
+                                array_splice($this->file, $lineno+$offset, 1);
+                                $offset--; // We just deleted a line
+                                break;
+                            }
+                            $try = $lineno+$offset-$newoffset;
+                            if (array_key_exists($try, $this->file) && $this->file[$try] == $text) {
+                                $offset -= $newoffset;
+                                if (self::$DEBUG) print "Ponavljam $lineno ('" . chop($text) . "'), korigujem $offset\n";
+                                array_splice($this->file, $lineno+$offset, 1);
+                                $offset--; // We just deleted a line
+                                break;
+                            }
+                            $newoffset++;
+                            if ($lineno+$offset-$newoffset < 0 && $lineno+$offset+$newoffset >= count($this->file)) {
+                                if (self::$DEBUG) print "Tekst $lineno ('" . chop($text) . "') nije pronađen nigdje!\n";
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Is file empty now?
                     if ($isCodeReplace && count($this->file) == 2 && empty(chop($this->file[1])))
                         array_splice($this->file, 1, 1);
                             
