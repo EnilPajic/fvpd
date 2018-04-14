@@ -40,7 +40,7 @@ class StaticAnalyzer
             //$file = preg_replace(self::$regex_mcomment, '', $file, -1, $this->MCOMMENT); #izbacimo multiline komentare
             // Multiline
             $k = strpos($file, "/*");
-            while ($k) {
+            while ($k >= 0 && $k < strlen($file) - 2) {
                 $l = strpos($file, "*/", $k+2);
                 if (!$l) break;
                 $this->MCOMMENT ++;
