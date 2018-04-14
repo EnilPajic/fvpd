@@ -110,7 +110,7 @@ class StaticAnalyzer
                                 $c = $content[$k];
                                 if ($c === "}")
                                     $this->BLOCK++;
-                                if ($c === "]")
+                                if ($c === "]" && $content[$k+1] != "[")
                                     $this->INDEXING++;
                                 else if ($c === ",")
                                     $this->NUMCOMMA++;
