@@ -9,8 +9,8 @@ class StaticAnalyzer
     private static $regex_branching = '/\b(if|else\s+if|else|switch|case|default)\b/i';
     private static $regex_string = '/"(.*?[^\\\\])"/i';
     private static $regex_charliteral = '/\'(.*?[^\\\\])\'/i';
-    private static $regex_plusminus = '/(?:\+=|\+|\-=|\-)/i';
-    private static $regex_putadijeli = '/(\*=|\*|\/=|\/)/i';
+    private static $regex_plusminus = '/(?:\+=|[^\+]\+[^\+]|\-=|[^\-]\-[^\-])/i';
+    private static $regex_putadijeli = '/(\*=|\*|\/=|\/)/i'; # GREŠKA broji deklaracije pointera
     private static $regex_modulaincdec = '/(?:%=|%|\+\+|\-\-)/i';
     private static $regex_iili = '/(&&|\|\||\band\b|\bor\b)/i';
     private static $regex_istirazliciti = '/(==|\!=|=|not_eq)/i';
@@ -56,7 +56,6 @@ class StaticAnalyzer
             $lines = explode("\n", $file);
             $this->ARRAYS = preg_match_all(self::$regex_nizovi, $file);
             $this->TRY = preg_match_all(self::$regex_trycatch, $file);
-            $this->ARRAYS = preg_match_all(self::$regex_nizovi, $file);
             $this->SAME = preg_match_all(self::$regex_istirazliciti, $file);
             $this->NOT = preg_match_all(self::$regex_notneg, $file);
             $this->PLUSMINUS = preg_match_all(self::$regex_plusminus, $file);
