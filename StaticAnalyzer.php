@@ -14,9 +14,9 @@ class StaticAnalyzer
     private static $regex_modulaincdec = '/(?:%=|%|\+\+|\-\-)/i';
     private static $regex_iili = '/(&&|\|\||\band\b|\bor\b)/i';
     private static $regex_istirazliciti = '/(==|\!=|not_eq)/i';
-    private static $regex_notneg = '/(?:~|(?:!(?<!=))|\bnot\b|\bcompl\b)/i';
-    private static $regex_compare = '/(?:>=|>|<=|<)/i';
-    private static $regex_rijetkiop = '/(?:&=|\|=|(?<!&)&(?!&)|(?<!\|)\|(?!\|)|\^=|\^|&=|\.\*|\-\>|\*\*\*\*|\*\*\*|\.\.\.|\.)/i';
+    private static $regex_notneg = '/(?:~|![^=]|\bnot\b|\bcompl\b)/i';
+    private static $regex_compare = '/(?:>=|>|<=|<)/i'; # GREŠKA: računa i #include <stdio.h> kao 2 operatora
+    private static $regex_rijetkiop = '/(?:&=|\|=|(?<!&)&(?!&)|(?<!\|)\|(?!\|)|\^=|\^|&=|\.\*|\-\>|\*\*\*\*|\*\*\*|\.\.\.|~)/i'; # GREŠKA: broji & u scanf-u
     private static $regex_include = '/#\h*include\h*/i';
     private static $regex_trycatch = '/\btry\b/i';
     private static $regex_tipovi = '/(?:(?:unsigned\s+|signed\s+)?(?:\blong\s+long\s+int\b|\blong\s+long\b|\blong\b|\bchar\b|\bshort\s+int\b|\bshort\b|\bint\b|\bbool\b))|\blong double\b|\bdouble\b|\bfloat\b|\bFILE\b|\bunsigned\b|\bsigned\b/';
