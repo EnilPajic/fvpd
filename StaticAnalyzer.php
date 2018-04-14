@@ -52,8 +52,8 @@ class StaticAnalyzer
             if ($stripstring)
                 $file = preg_replace(self::$regex_string, '', $file, -1, $this->STRINGS); #izbacimo string literale
 
+            $file = preg_replace(self::$regex_charliteral, '', $file, -1, $this->LITERAL);
             $lines = explode("\n", $file);
-            $this->LITERAL = preg_match_all(self::$regex_charliteral, $file);
             $this->ARRAYS = preg_match_all(self::$regex_nizovi, $file);
             $this->TRY = preg_match_all(self::$regex_trycatch, $file);
             $this->ARRAYS = preg_match_all(self::$regex_nizovi, $file);
