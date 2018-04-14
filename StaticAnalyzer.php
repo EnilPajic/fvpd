@@ -13,7 +13,7 @@ class StaticAnalyzer
     private static $regex_putadijeli = '/(\*=|\*|\/=|\/)/i'; # GREŠKA broji deklaracije pointera
     private static $regex_modulaincdec = '/(?:%=|%|\+\+|\-\-)/i';
     private static $regex_iili = '/(&&|\|\||\band\b|\bor\b)/i';
-    private static $regex_istirazliciti = '/(==|\!=|=|not_eq)/i';
+    private static $regex_istirazliciti = '/(==|\!=|not_eq)/i';
     private static $regex_notneg = '/(?:~|(?:!(?<!=))|\bnot\b|\bcompl\b)/i';
     private static $regex_compare = '/(?:>=|>|<=|<)/i';
     private static $regex_rijetkiop = '/(?:&=|\|=|(?<!&)&(?!&)|(?<!\|)\|(?!\|)|\^=|\^|&=|\.\*|\-\>|\*\*\*\*|\*\*\*|\.\.\.|\.)/i';
