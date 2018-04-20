@@ -15,9 +15,9 @@ class StaticAnalyzer
     private static $regex_iili = '/(&&|\|\||\band\b|\bor\b)/i';
     private static $regex_istirazliciti = '/(==|\!=|not_eq)/i';
     private static $regex_notneg = '/(?:~|![^=]|\bnot\b|\bcompl\b)/i';
-    private static $regex_compare = '/(?:>=|>|<=|<)/i'; # GREŠKA: računa i #include <stdio.h> kao 2 operatora
-    private static $regex_rijetkiop = '/(?:&=|\|=|(?<!\|)\|(?!\|)|\^=|\^|&=|\.\*|\-\>|\*\*\*\*|\*\*\*|\.\.\.|~)/i'; # GREŠKA: broji & u scanf-u
-    private static $regex_include = '/#\h*include\h*/i';
+    private static $regex_compare = '/(?:>=|>|<=|<)/i';
+    private static $regex_rijetkiop = '/(?:&=|\|=|(?<!\|)\|(?!\|)|\^=|\^|&=|\.\*|\-\>|\*\*\*\*|\*\*\*|\.\.\.|~)/i';
+    private static $regex_include = '/#\h*include.*/i';
     private static $regex_trycatch = '/\btry\b/i';
     private static $regex_tipovi = '/(?:(?:unsigned\s+|signed\s+)?(?:\blong\s+long\s+int\b|\blong\s+long\b|\blong\b|\bchar\b|\bshort\s+int\b|\bshort\b|\bint\b|\bbool\b))|\blong double\b|\bdouble\b|\bfloat\b|\bFILE\b|\bunsigned\b|\bsigned\b|\bvoid\b/';
     private static $regex_fun = '/([a-zA-Z0-9_>:]+)(?<!else)\s*\*{0,5}\s+[a-zA-Z0-9_>:]+\s*?\(.*\)\s*(const)?\s*{/i';
@@ -54,6 +54,7 @@ class StaticAnalyzer
 
             $file = preg_replace(self::$regex_charliteral, '', $file, -1, $this->LITERAL);
             $lines = explode("\n", $file);
+            $file = preg_replace(self::$regex_include, '', $file, -1, $this->INCLUDE);
             $this->ARRAYS = preg_match_all(self::$regex_nizovi, $file);
             $this->TRY = preg_match_all(self::$regex_trycatch, $file);
             $this->SAME = preg_match_all(self::$regex_istirazliciti, $file);
@@ -69,7 +70,6 @@ class StaticAnalyzer
             $this->ALLNUMBERS = preg_match_all(self::$regex_svibrojevi, $file);
             $this->LOOP= preg_match_all(self::$regex_loop, $file);
             $this->BRANCH = preg_match_all(self::$regex_branching, $file);
-            $this->INCLUDE = preg_match_all(self::$regex_include, $file);
             $this->FUN = preg_match_all(self::$regex_fun, $file);
             $this->TYPES = preg_match_all(self::$regex_tipovi, $file);
 
