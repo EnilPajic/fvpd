@@ -15,7 +15,7 @@ class StaticAnalyzer
     private static $regex_iili = '/(&&|\|\||\band\b|\bor\b)/i';
     private static $regex_istirazliciti = '/(==|\!=|not_eq)/i';
     private static $regex_notneg = '/(?:~|![^=]|\bnot\b|\bcompl\b)/i';
-    private static $regex_compare = '/(?:>=|>|<=|<)/i';
+    private static $regex_compare = '/(?:>=|[^>]>[^>]|<=|[^<]<[^<])/i';
     private static $regex_rijetkiop = '/(?:&=|\|=|(?<!\|)\|(?!\|)|\^=|\^|&=|\.\*|\-\>|\*\*\*\*|\*\*\*|\.\.\.|~)/i';
     private static $regex_include = '/#\h*include.*/i';
     private static $regex_trycatch = '/\btry\b/i';
