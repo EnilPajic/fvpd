@@ -21,7 +21,7 @@ class StaticAnalyzer
     private static $regex_trycatch = '/\btry\b/i';
     private static $regex_tipovi = '/(?:(?:unsigned\s+|signed\s+)?(?:\blong\s+long\s+int\b|\blong\s+long\b|\blong\b|\bchar\b|\bshort\s+int\b|\bshort\b|\bint\b|\bbool\b))|\blong double\b|\bdouble\b|\bfloat\b|\bFILE\b|\bunsigned\b|\bsigned\b|\bvoid\b/';
     private static $regex_fun = '/([a-zA-Z0-9_>:]+)(?<!else)\s*\*{0,5}\s+[a-zA-Z0-9_>:]+\s*?\(.*\)\s*(const)?\s*{/i';
-    private static $regex_nizovi = '/[a-zA-Z0-9_>]+(?<!else)(?:\**\s+\**\s*|\*+|,)[a-zA-Z0-9_>]+\s*\[\s*(?:\d{0,12}|.*?)\s*\]/i';
+    private static $regex_nizovi = '/[a-zA-Z0-9_>]+(?<!else|delete)(?:\**\s+\**\s*|\*+|,)[a-zA-Z0-9_>]+\s*\[\s*(?:\d{0,12}|.*?)\s*\]/i';
     private static $regex_svibrojevi = '/\d{1,50}/i';
     private static $regex_brojevi = '/\b\d+\b/i';
 
