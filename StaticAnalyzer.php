@@ -9,7 +9,7 @@ class StaticAnalyzer
     private static $regex_branching = '/\b(if|else\s+if|else|switch|case|default)\b/i';
     private static $regex_string = '/"(.*?[^\\\\])"/i'; # GREŠKA ne broji prazan string ""
     private static $regex_charliteral = '/\'(.*?[^\\\\])\'/i';
-    private static $regex_plusminus = '/(?:\+=|[^\+]\+[^\+]|\-=|[^\-]\-[^\-])/i';
+    private static $regex_plusminus = '/(?:\+=|[^\+]\+[^\+]|\-=|[^\-]\-[^\->])/i';
     private static $regex_putadijeli = '/(\*=|\*|\/=|\/)/i'; # GREŠKA broji deklaracije pointera
     private static $regex_modulaincdec = '/(?:%=|%|\+\+|\-\-)/i';
     private static $regex_iili = '/(&&|\|\||\band\b|\bor\b)/i';
