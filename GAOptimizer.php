@@ -16,6 +16,7 @@ class GAOptimizer
     private $strains = [];
     private $generation = 0, $lastname = 0, $output = false;
     private $timer = null;
+    private $lastProgAvg = 0, $countUnchanged = 0;
     
     public function __construct ($algorithm, $training_set, $ground_truth_filename, $output = false)
         {
@@ -297,25 +298,37 @@ class GAOptimizer
             
             // Select progenitors for next generation
             $newpop = $newfitness = $newnames = [];
-            $i = 0;
+            $i = 0; $progavg = 0;
             foreach($this->fitness as $k => $v)
                 {
                     $newpop[] = $this->population[$k];
                     $newfitness[] = $v;
                     $newnames[] = $this->names[$k];
+                    $progavg += $v;
                     if($this->output) print "Individual $k (" . $this->names[$k] . ") becomes ".($i++)." (fitness $v)\n";
                     if (count($newpop) == \EP\GA_PROGENITORS_SIZE) break;
                 }
+                
+            // Alternate method: calculage average fitness for progenitors, new strain if without change for 3 times
+            $progavg /= \EP\GA_PROGENITORS_SIZE;
+            if (abs($progavg - $this->lastProgAvg) < 0.00001) $this->countUnchanged++;
+            else {
+                $this->countUnchanged = 0;
+                $this->lastProgAvg = $progavg;
+            }
+            if ($this->output) {
+                print "Average $progavg.";
+                if ($this->countUnchanged > 0) print " Not changed for ".$this->countUnchanged." generations.";
+                print "\n\n";
+            }
             
-            // Find maximum distance between all individuals in PROGENITORS
-            $radius = $this->PopulationRadius($newpop);
-            if($this->output) print "Generation radius is $radius\n\n";
-            
-            // If population is too concentrated, start a new strain
-            if ($radius < \EP\GA_STRAIN_LIMIT)
+            if ($this->countUnchanged == 3)
                 {
+                    $this->countUnchanged = 0;
+                    $this->lastProgAvg = 0;
                     $this->NewStrain($newpop, $newnames, $newfitness);
                 }
+            
             
             // Create offspring for next generation
             $children = [];
