@@ -339,7 +339,10 @@ class GAOptimizer
                         $p1 = rand( 0, count($newpop)-1 );
                         $p2 = rand( 0, count($newpop)-1 );
                     } while ($p1 == $p2 || array_key_exists("$p1,$p2", $children) || array_key_exists("$p2,$p1", $children));
-                    $children["$p1,$p2"] = $this->Hibridize( $newpop[$p1], $newpop[$p2] );
+                    if ($i < $num_children / 2)
+                        $children["$p1,$p2"] = $this->Hibridize( $newpop[$p1], $newpop[$p2], true );
+                    else
+                        $children["$p1,$p2"] = $this->Hibridize( $newpop[$p1], $newpop[$p2], false );
                     if ($this->IsInMemory($children["$p1,$p2"]))
                         {
                             if ($this->output) "Found duplicate in memory for $p1,$p2\n";
